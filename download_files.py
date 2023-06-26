@@ -12,6 +12,7 @@ from fake_useragent import UserAgent
 
 import pandas as pd
 
+
 def get_category_by_id(category_id: int) -> dict:
     params = {"theme": category_id, "filter": "all", "page": 1}
     problem_data = {}
@@ -61,7 +62,6 @@ def convert_xls_files_to_csv(directory_path: Path) -> None:
         csv_file_path = xls_file_path.replace(".xls", ".csv")
         if not os.path.exists(csv_file_path):
             read_file = pd.read_excel(xls_file_path)
-            # print(read_file)
             read_file.to_csv(csv_file_path, index=None, header=False)
         else:
             print(f"File {csv_file_path} already exists.")
@@ -76,9 +76,9 @@ if __name__ == '__main__':
 
     BASE_URL = "https://inf-ege.sdamgia.ru"
     categories = {
-        # "type_24": 413,  # Type 24
-        # "type_26": 415,  # Type 26
-        # "type_27": 416,  # Type 27
+        "type_24": 413,  # Type 24
+        "type_26": 415,  # Type 26
+        "type_27": 416,  # Type 27
         "type_22": 215,  # Type 22
     }
     txt_files_categories = [413, 415, 416]

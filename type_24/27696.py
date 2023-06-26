@@ -1,0 +1,1 @@
+print(max(map(len, open("files/27696.txt").read().replace("D", " ").replace("R", " ").split())))

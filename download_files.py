@@ -3,6 +3,7 @@ from os import listdir
 from os.path import isfile, join
 import time
 from pathlib import Path
+from typing import Union
 
 from bs4 import BeautifulSoup
 import requests
@@ -24,19 +25,22 @@ def get_category_by_id(category_id: int) -> dict:
         except Exception as ex:
             raise Exception(ex)
         soup = BeautifulSoup(response.text, "html.parser")
-        problem_cards = soup.find_all('div', class_="problem_container")
+        problem_cards = soup.find_all("div", class_="problem_container")
         if not problem_cards:
             return problem_data
         for card in problem_cards:
             problem_id = card.get("id").replace("problem_", "")
             pbody = card.find("div", class_="pbody")
-            file_urls = [urljoin(BASE_URL, url.get("href")) for url in pbody.find_all("a", {"target": "_blank"})]
+            file_urls = [
+                urljoin(BASE_URL, url.get("href"))
+                for url in pbody.find_all("a", {"target": "_blank"})
+            ]
             # print(problem_id, file_urls)
             problem_data[problem_id] = file_urls
     return problem_data
 
 
-def download_file(url: str, file_path: Path) -> None:
+def download_file(url: str, file_path: Union[Path, str]) -> None:
     try:
         response = requests.get(url)
     except Exception as ex:
@@ -46,7 +50,7 @@ def download_file(url: str, file_path: Path) -> None:
     print(f"Downloaded {url} to {file_path}")
 
 
-def download_xls_file(url: str, file_path: Path) -> None:
+def download_xls_file(url: str, file_path: Union[Path, str]) -> None:
     try:
         response = requests.get(url, headers=headers)
     except Exception as ex:
@@ -56,33 +60,37 @@ def download_xls_file(url: str, file_path: Path) -> None:
     print(f"Downloaded {url} to {file_path}")
 
 
-def convert_xls_files_to_csv(directory_path: Path) -> None:
-    xls_file_paths = [os.path.join(directory_path, f) for f in listdir(directory_path) if isfile(join(directory_path, f)) if Path(f).suffix == ".xls"]
+def convert_xls_files_to_csv(directory_path: Union[Path, str]) -> None:
+    xls_file_paths = [
+        os.path.join(directory_path, f)
+        for f in listdir(directory_path)
+        if isfile(join(directory_path, f))
+        if Path(f).suffix == ".xls"
+    ]
     for xls_file_path in xls_file_paths:
         csv_file_path = xls_file_path.replace(".xls", ".csv")
         if not os.path.exists(csv_file_path):
             read_file = pd.read_excel(xls_file_path)
-            read_file.to_csv(csv_file_path, index=None, header=False)
+            read_file.to_csv(csv_file_path, index=False, header=False)
         else:
             print(f"File {csv_file_path} already exists.")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     start_time = time.perf_counter()
 
-    headers = {
-        "user-agent": UserAgent().random
-    }
+    headers = {"user-agent": UserAgent().random}
 
     BASE_URL = "https://inf-ege.sdamgia.ru"
     categories = {
-        "type_24": 413,  # Type 24
-        "type_26": 415,  # Type 26
-        "type_27": 416,  # Type 27
-        "type_22": 215,  # Type 22
+        "type_18": 412,
+        "type_24": 413,
+        "type_26": 415,
+        "type_27": 416,
+        "type_22": 215,
     }
     txt_files_categories = [413, 415, 416]
-    xls_files_categories = [215]
+    xls_files_categories = [215, 412]
     problem_ids_with_files = {}
     root = Path(__file__).parent
     for category_dir, category_id in categories.items():
@@ -102,18 +110,24 @@ if __name__ == '__main__':
                     else:
                         print(f"File {file_path} already exists.")
                 elif len(urls) == 2:
-                    first_file_path = os.path.join(category_files_path, f"{problem_id}_A.txt")
+                    first_file_path = os.path.join(
+                        category_files_path, f"{problem_id}_A.txt"
+                    )
                     if not os.path.exists(first_file_path):
                         download_file(urls[0], first_file_path)
                     else:
                         print(f"File {first_file_path} already exists.")
-                    second_file_path = os.path.join(category_files_path, f"{problem_id}_B.txt")
+                    second_file_path = os.path.join(
+                        category_files_path, f"{problem_id}_B.txt"
+                    )
                     if not os.path.exists(second_file_path):
                         download_file(urls[1], second_file_path)
                     else:
                         print(f"File {second_file_path} already exists.")
                 else:
-                    print(f"Expected 1 or 2 file urls, got {len(urls)}. {problem_id=}, {urls=}")
+                    print(
+                        f"Expected 1 or 2 file urls, got {len(urls)}. {problem_id=}, {urls=}"
+                    )
             elif category_id in xls_files_categories:
                 file_path = os.path.join(category_files_path, f"{problem_id}.xls")
                 if not os.path.exists(file_path):
